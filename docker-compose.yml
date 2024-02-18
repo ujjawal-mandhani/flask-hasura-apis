@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  flask-cont:
+    build: .
+    container_name: flask-cont
+    volumes:
+      - ./backend-api:/home/app/
+    ports:
+      - 23002:23002
+    environment:
+      HASURA_API_KEY: x-hasura-admin-secret
+      HASURA_API_VALUE: hasura12345
+      SECRET_KEY: 9cef962019e98c0f4ed951b979d615cbaa98e51edd464ca5cc5c99349f5b9e6b
+      PYTHONPATH: /home/app
+    networks:
+      - flask-network
+    restart: always
+    depends_on:
+      - postgres
+      - graphql-engine
+
+  postgres:
+    build: ./postgres/
+    environment:
+      POSTGRES_USER: flask
+      POSTGRES_PASSWORD: flask
+      POSTGRES_DB: flask
+    ports:
+      - 23001:5432
+    volumes:
+      - ./postgres/postgres_data:/var/lib/postgresql/data
+    networks:
+      - flask-network
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "flask" ]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+
+  graphql-engine:
+    image: hasura/graphql-engine
+    ports:
+      - 23003:8080
+    depends_on:
+      - postgres
+    restart: always
+    networks:
+      - flask-network
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://flask:flask@postgres:5432/flask
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://flask:flask@postgres:5432/flask
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ADMIN_SECRET: hasura12345
+
+networks:
+  flask-network:
+    driver: bridge
