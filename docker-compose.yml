@@ -19,6 +19,7 @@ services:
     depends_on:
       - postgres
       - graphql-engine
+      - elasticsearch-cont
 
   postgres:
     build: ./postgres/
@@ -52,6 +53,46 @@ services:
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://flask:flask@postgres:5432/flask
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_ADMIN_SECRET: hasura12345
+
+  elasticsearch-cont:
+    image: elasticsearch:8.12.2
+    container_name: elasticsearch-cont
+    environment:
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=elasticsearchpassword # user name is "elastic"
+      - xpack.security.enabled=false
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - flask-network
+    mem_limit: 2g
+    volumes:
+      - ./elasticsearch:/usr/share/elasticsearch/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --silent --fail localhost:9200/_cluster/health || exit 1"
+        ]
+      interval: 40s
+      timeout: 10s
+      retries: 5
+
+  kibana-cont:
+    image: kibana:8.12.2
+    ports:
+      - 5601:5601
+    environment:
+      - SERVERNAME=kibana
+      - ELASTICSEARCH_HOSTS=http://elasticsearch-cont:9200
+    mem_limit: 2g
+    volumes:
+      - ./kibana:/usr/share/kibana/data
+    depends_on:
+      - elasticsearch-cont
+    networks:
+      - flask-network
 
 networks:
   flask-network:

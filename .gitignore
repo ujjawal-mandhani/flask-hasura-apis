@@ -1,3 +1,5 @@
 postgres/postgres_data
 hasura_compose
 README_DEFAULT.md
+elasticsearch
+kibana

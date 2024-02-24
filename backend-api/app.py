@@ -7,12 +7,29 @@ import requests
 import os
 import sys
 import uuid
+from elasticsearch import Elasticsearch
 from utils_folder.utils import hasura_api_key, hasura_api_value, secret_value_jwt, url, headers, verify_cookie_token, hash_password_func, verify_password, generateJWTToken, verifyJWTToken, update_headers
 
 app = Flask(__name__)
-app.logger.addHandler(logging.StreamHandler())
-app.logger.setLevel(logging.INFO)
 
+es = Elasticsearch(['http://elasticsearch-cont:9200'])
+class ElasticsearchHandler(logging.Handler):
+    def emit(self, record):
+        log_entry = {
+            "@timestamp": datetime.datetime.utcnow().isoformat(),
+            "log_level": record.levelname,
+            "message": record.getMessage()
+        }
+        es.index(index='2024', body=log_entry)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = ElasticsearchHandler()
+logger.addHandler(handler)
+
+app.logger.setLevel(logging.INFO)
+flask_handler = ElasticsearchHandler()
+app.logger.addHandler(flask_handler)
 
 # do not edit this global variable anywhere in code assign a new variable
 query = """
