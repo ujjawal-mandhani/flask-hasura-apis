@@ -3,3 +3,4 @@ hasura_compose
 README_DEFAULT.md
 elasticsearch
 kibana
+local.sh
