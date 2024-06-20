@@ -16,11 +16,11 @@ es = Elasticsearch(['http://elasticsearch-cont:9200'])
 class ElasticsearchHandler(logging.Handler):
     def emit(self, record):
         log_entry = {
-            "@timestamp": datetime.datetime.utcnow().isoformat(),
+            "@timestamp": datetime.datetime.now().isoformat(),
             "log_level": record.levelname,
             "message": record.getMessage()
         }
-        es.index(index='2024', body=log_entry)
+        es.index(index=str(datetime.datetime.now().year), body=log_entry)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
