@@ -115,7 +115,7 @@ services:
       - flask-network
   
   apache-apisix:
-    image: apache/apisix
+    build: ./apisix
     ports:
       - 9080:9080
       - 9180:9180
@@ -138,6 +138,8 @@ services:
     environment:
       - ETCD_ADVERTISE_CLIENT_URLS=http://apache-apisix-etcd:2379
       - ALLOW_NONE_AUTHENTICATION=yes
+    ports:
+      - 2379:2379
     mem_limit: 2g
     networks:
       - flask-network
